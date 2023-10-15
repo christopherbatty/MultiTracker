@@ -301,7 +301,7 @@ bool MeshSnapper::snap_vertex_pair( size_t vertex_to_keep, size_t vertex_to_dele
         if (m0[i] == std::numeric_limits<double>::infinity() && m1[i] == std::numeric_limits<double>::infinity())
         {
             // both vertices are constrained in this direction: this requires the two cooresponding coordindates are equal
-            assert(m_surf.get_position(vertex_to_delete)[i] == m_surf.get_position(vertex_to_keep)[i]);
+            assert(std::abs(m_surf.get_position(vertex_to_delete)[i] - m_surf.get_position(vertex_to_keep)[i]) < 1e-6);
             vertex_new_position[i] = m_surf.get_position(vertex_to_delete)[i];
         } else if (m0[i] == std::numeric_limits<double>::infinity())
         {
