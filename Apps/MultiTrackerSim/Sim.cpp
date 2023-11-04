@@ -223,6 +223,8 @@ bool Sim::init(const std::string & option_file, const std::string & output_direc
     // BB wall constraint: update the infinite masses
     updateBBWallConstraints();
 
+    // mesh improvement
+    m_st->improve_mesh();
     
     // prepare to start the simulation
     m_time = 0;
