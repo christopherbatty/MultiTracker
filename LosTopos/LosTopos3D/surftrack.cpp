@@ -409,7 +409,7 @@ void SurfTrack::defrag_mesh( )
     int vert_delete_count = 0;
     for (size_t i = 0; i < get_num_vertices(); ++i)
     {
-       if (m_mesh.triangle_is_deleted(i))
+       if (m_mesh.vertex_is_deleted(i))
        {
           vert_delete_count++;
        }

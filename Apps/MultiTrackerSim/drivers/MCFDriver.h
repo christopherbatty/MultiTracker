@@ -15,9 +15,12 @@ class MCFDriver
 public:
     static bool step(LosTopos::SurfTrack * st, double dt, bool bbwall = false);
     
-    static double determineMaxDt(LosTopos::SurfTrack * st, std::vector<LosTopos::Vec3d> & v);
+private:
+    static double determineMaxDt(const LosTopos::SurfTrack * st, const std::vector<LosTopos::Vec3d> & v);
     
-    static void evaluateV(LosTopos::SurfTrack * st, std::vector<LosTopos::Vec3d> & v);
+    static void evaluateV(const LosTopos::SurfTrack * st, std::vector<LosTopos::Vec3d> & v);
+
+    static int onBBWall(const LosTopos::Vec3d& pos);
     
 };
 

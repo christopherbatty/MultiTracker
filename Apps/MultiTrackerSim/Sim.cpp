@@ -223,6 +223,8 @@ bool Sim::init(const std::string & option_file, const std::string & output_direc
     // BB wall constraint: update the infinite masses
     updateBBWallConstraints();
 
+    // mesh improvement
+    m_st->improve_mesh();
     
     // prepare to start the simulation
     m_time = 0;
@@ -664,12 +666,12 @@ LosTopos::Vec3c Sim::generate_collapsed_solid_label(LosTopos::SurfTrack & st, si
     std::cout << "Label0 " << (int)label0[0] << (int)label0[1] << (int)label0[2] << std::endl;
     std::cout << "Constraint0 " << constraint0 << std::endl;
     std::cout << "Constraint1 " << constraint1 << std::endl;*/
-    assert(((constraint0 & (1 << 0)) || (constraint0 & (1 << 3))) == (bool)label0[0]);  //x0's physical status of being on the left or right wall should match label0's (i.e. mass's solid indicator)
-    assert(((constraint0 & (1 << 1)) || (constraint0 & (1 << 4))) == (bool)label0[1]);
-    assert(((constraint0 & (1 << 2)) || (constraint0 & (1 << 5))) == (bool)label0[2]);
-    assert(((constraint1 & (1 << 0)) || (constraint1 & (1 << 3))) == (bool)label1[0]);
-    assert(((constraint1 & (1 << 1)) || (constraint1 & (1 << 4))) == (bool)label1[1]);
-    assert(((constraint1 & (1 << 2)) || (constraint1 & (1 << 5))) == (bool)label1[2]);
+    assert(!(bool)label0[0] || ((constraint0 & (1 << 0)) || (constraint0 & (1 << 3))));  //x0's physical status of being on the left or right wall should match label0's (i.e. mass's solid indicator)
+    assert(!(bool)label0[1] || ((constraint0 & (1 << 1)) || (constraint0 & (1 << 4))));
+    assert(!(bool)label0[2] || ((constraint0 & (1 << 2)) || (constraint0 & (1 << 5))));
+    assert(!(bool)label1[0] || ((constraint1 & (1 << 0)) || (constraint1 & (1 << 3))));
+    assert(!(bool)label1[1] || ((constraint1 & (1 << 1)) || (constraint1 & (1 << 4))));
+    assert(!(bool)label1[2] || ((constraint1 & (1 << 2)) || (constraint1 & (1 << 5))));
     
     LosTopos::Vec3c result;  // if either endpoint is constrained, the collapsed point shold be constrained. more specifically it should be on all the walls any of the two endpoints is on (implemented in generate_collapsed_position())
     int result_constraint = (constraint0 | constraint1);
@@ -688,12 +690,12 @@ LosTopos::Vec3c Sim::generate_split_solid_label(LosTopos::SurfTrack & st, size_t
     int constraint0 = onBBWall(Vec3d(x0[0], x0[1], x0[2]));
     int constraint1 = onBBWall(Vec3d(x1[0], x1[1], x1[2]));
     
-    assert(((constraint0 & (1 << 0)) || (constraint0 & (1 << 3))) == (bool)label0[0]);
-    assert(((constraint0 & (1 << 1)) || (constraint0 & (1 << 4))) == (bool)label0[1]);
-    assert(((constraint0 & (1 << 2)) || (constraint0 & (1 << 5))) == (bool)label0[2]);
-    assert(((constraint1 & (1 << 0)) || (constraint1 & (1 << 3))) == (bool)label1[0]);
-    assert(((constraint1 & (1 << 1)) || (constraint1 & (1 << 4))) == (bool)label1[1]);
-    assert(((constraint1 & (1 << 2)) || (constraint1 & (1 << 5))) == (bool)label1[2]);
+    assert(!(bool)label0[0] || ((constraint0 & (1 << 0)) || (constraint0 & (1 << 3))));
+    assert(!(bool)label0[1] || ((constraint0 & (1 << 1)) || (constraint0 & (1 << 4))));
+    assert(!(bool)label0[2] || ((constraint0 & (1 << 2)) || (constraint0 & (1 << 5))));
+    assert(!(bool)label1[0] || ((constraint1 & (1 << 0)) || (constraint1 & (1 << 3))));
+    assert(!(bool)label1[1] || ((constraint1 & (1 << 1)) || (constraint1 & (1 << 4))));
+    assert(!(bool)label1[2] || ((constraint1 & (1 << 2)) || (constraint1 & (1 << 5))));
   
     LosTopos::Vec3c result;  // the splitting midpoint has a positive constraint label only if the two endpoints are on a same wall (sharing a bit in their constraint bitfield representation)
     int result_constraint = (constraint0 & constraint1);

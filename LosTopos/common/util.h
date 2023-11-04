@@ -204,9 +204,9 @@ inline T ramp(T r)
 inline int lround(double x)
 {
     if(x>0)
-        return (x-floor(x)<0.5) ? (int)floor(x) : (int)ceil(x);
+        return (x-std::floor(x)<0.5) ? (int)std::floor(x) : (int)std::ceil(x);
     else
-        return (x-floor(x)<=0.5) ? (int)floor(x) : (int)ceil(x);
+        return (x-std::floor(x)<=0.5) ? (int)std::floor(x) : (int)std::ceil(x);
 }
 
 inline double remainder(double x, double y)
