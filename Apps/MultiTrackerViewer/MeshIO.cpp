@@ -13,11 +13,10 @@ bool MeshIO::save(LosTopos::SurfTrack & st, const std::string & filename, bool b
     if (binary)
     {
         std::ofstream os(filename.c_str(), std::ios::binary);
-        size_t n;
         
-        n = st.m_mesh.nv();
-        os.write((char *)&n, sizeof (size_t));
-        for (size_t i = 0; i < n; i++)
+        const size_t nv = st.m_mesh.nv();
+        os.write((char *)&nv, sizeof (size_t));
+        for (size_t i = 0; i < nv; i++)
         {
             LosTopos::Vec3d x = st.get_position(i);
             os.write((char *)&(x[0]), sizeof (x[0]));
@@ -25,9 +24,17 @@ bool MeshIO::save(LosTopos::SurfTrack & st, const std::string & filename, bool b
             os.write((char *)&(x[2]), sizeof (x[2]));
         }
         
-        n = st.m_mesh.nt();
-        os.write((char *)&n, sizeof (size_t));
-        for (size_t i = 0; i < n; i++)
+        const size_t nt = st.m_mesh.nt();
+        size_t num_non_deleted_tris = 0;
+        for (size_t i = 0; i < nt; i++)
+        {
+            const LosTopos::Vec3st &t = st.m_mesh.get_triangle(i);
+            if (t[0] == t[1])
+                continue;
+            ++num_non_deleted_tris;
+        }
+        os.write((char *)&num_non_deleted_tris, sizeof (size_t));
+        for (size_t i = 0; i < nt; i++)
         {
             LosTopos::Vec3st t = st.m_mesh.get_triangle(i);
             if (t[0] == t[1])
