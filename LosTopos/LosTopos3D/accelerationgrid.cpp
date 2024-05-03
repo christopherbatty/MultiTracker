@@ -263,14 +263,8 @@ void AccelerationGrid::remove_element(size_t idx)
     {
         Vec3st cellcoords = m_elementidxs[idx][c];
         std::vector<size_t>* cell = m_cells((int)cellcoords[0], (int)cellcoords[1], (int)cellcoords[2]);
-        
-        std::vector<size_t>::iterator it = cell->begin();
-        while(*it != idx)
-        {
-            it++;
-        }
-        
-        cell->erase(it);
+
+        cell->erase(std::remove(cell->begin(), cell->end(), idx), cell->end());
     }
     
     m_elementidxs[idx].clear();
@@ -378,17 +372,11 @@ void AccelerationGrid::update_element(size_t idx, const Vec3d& xmin, const Vec3d
                   std::vector<size_t>*& cell = m_cells(cur_index[0], cur_index[1], cur_index[2]);
 
                   //erase the index of the element in the cell
-                  std::vector<size_t>::iterator it = cell->begin();
-                  while(*it != idx)
-                     it++;
-                  cell->erase(it);
+                  cell->erase(std::remove(cell->begin(), cell->end(), idx), cell->end());
 
                   //erase the index of the *cell* in the *element* -> is this pricy?
-                  std::vector<Vec3st>::iterator it2 = m_elementidxs[idx].begin();
-                  while(*it2 != Vec3st(cur_index)) 
-                     it2++;
-                  m_elementidxs[idx].erase(it2);
-
+                  std::vector<Vec3st>& elementidxs = m_elementidxs[idx];
+                  elementidxs.erase(std::remove(elementidxs.begin(), elementidxs.end(), Vec3st(cur_index)), elementidxs.end());
                }
             }
          }
@@ -405,13 +393,7 @@ void AccelerationGrid::update_element(size_t idx, const Vec3d& xmin, const Vec3d
             Vec3st cellcoords = m_elementidxs[idx][c];
             std::vector<size_t>*& cell = m_cells((int)cellcoords[0], (int)cellcoords[1], (int)cellcoords[2]);
 
-            std::vector<size_t>::iterator it = cell->begin();
-            while(*it != idx)
-            {
-               it++;
-            }
-
-            cell->erase(it);
+            cell->erase(std::remove(cell->begin(), cell->end(), idx), cell->end());
          }
       }
 
