@@ -355,14 +355,14 @@ bool EdgeFlipper::flip_edge( size_t edge,
     normalize(new_normal0);
     normalize(new_normal1);
     
-    if ( new_area0 < std::min(m_surf.m_min_triangle_area, std::min(old_area0, old_area0) * 0.5) )
+    if ( new_area0 < std::min(m_surf.m_min_triangle_area, std::min(old_area0, old_area1) * 0.5) )
     {
         if ( m_surf.m_verbose ) { std::cout << "edge flip rejected: area0 too small" << std::endl;    }
         g_stats.add_to_int( "EdgeFlipper:edge_flip_new_area_too_small", 1 );
         return false;
     }
     
-    if ( new_area1 < std::min(m_surf.m_min_triangle_area, std::min(old_area0, old_area0) * 0.5) )
+    if ( new_area1 < std::min(m_surf.m_min_triangle_area, std::min(old_area0, old_area1) * 0.5) )
     {
         if ( m_surf.m_verbose ) { std::cout << "edge flip rejected: area1 too small" << std::endl; }
         g_stats.add_to_int( "EdgeFlipper:edge_flip_new_area_too_small", 1 );
