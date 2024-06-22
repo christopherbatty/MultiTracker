@@ -1027,6 +1027,8 @@ bool EdgeCollapser::edge_is_collapsible( size_t edge_index, double& current_leng
     
     //skip boundary edges if we're not remeshing those
     if(!m_remesh_boundaries && m_surf.m_mesh.m_is_boundary_edge[edge_index]) { return false; }
+
+    current_length = m_surf.get_edge_length(edge_index);
     
     //try to collapse based on small angles
     size_t vertex_a = m_surf.m_mesh.m_edges[edge_index][0];
@@ -1054,7 +1056,6 @@ bool EdgeCollapser::edge_is_collapsible( size_t edge_index, double& current_leng
         //    return true;
     }
     
-    current_length = m_surf.get_edge_length(edge_index);
     if ( m_use_curvature )
     {
         
