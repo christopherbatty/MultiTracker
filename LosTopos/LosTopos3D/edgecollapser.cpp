@@ -346,6 +346,7 @@ bool EdgeCollapser::collapse_edge_introduces_normal_inversion( size_t source_ver
 // --------------------------------------------------------
 
 bool EdgeCollapser::collapse_edge_introduces_volume_change( size_t source_vertex,
+                                                           size_t destination_vertex,
                                                            size_t edge_index,
                                                            const Vec3d& vertex_new_position )
 {
@@ -366,13 +367,18 @@ bool EdgeCollapser::collapse_edge_introduces_volume_change( size_t source_vertex
     //
     // Check volume change
     //
-    
-    const std::vector< size_t >& triangles_incident_to_vertex = m_surf.m_mesh.m_vertex_to_triangle_map[source_vertex];
+
     double volume_change = 0;
     
-    for ( size_t i = 0; i < triangles_incident_to_vertex.size(); ++i )
+    for (const auto& tri_idx : m_surf.m_mesh.m_vertex_to_triangle_map[source_vertex])
     {
-        const Vec3st& inc_tri = m_surf.m_mesh.get_triangle( triangles_incident_to_vertex[i] );
+        const Vec3st& inc_tri = m_surf.m_mesh.get_triangle( tri_idx );
+        volume_change += signed_volume( vertex_new_position, m_surf.get_position(inc_tri[0]), m_surf.get_position(inc_tri[1]), m_surf.get_position(inc_tri[2]) );
+    }
+
+    for (const auto& tri_idx : m_surf.m_mesh.m_vertex_to_triangle_map[destination_vertex])
+    {
+        const Vec3st& inc_tri = m_surf.m_mesh.get_triangle( tri_idx );
         volume_change += signed_volume( vertex_new_position, m_surf.get_position(inc_tri[0]), m_surf.get_position(inc_tri[1]), m_surf.get_position(inc_tri[2]) );
     }
     
@@ -839,19 +845,10 @@ bool EdgeCollapser::collapse_edge( size_t edge )
     if ( m_surf.get_position(m_surf.m_mesh.m_edges[edge][1]) != m_surf.get_position(m_surf.m_mesh.m_edges[edge][0]) )
         //if ( mag ( m_surf.get_position(m_surf.m_mesh.m_edges[edge][1]) - m_surf.get_position(m_surf.m_mesh.m_edges[edge][0]) ) > 0 )
     {
-        
-        // Change source vertex predicted position to superimpose onto destination vertex
-        m_surf.set_newposition( vertex_to_keep, vertex_new_position );
-        m_surf.set_newposition( vertex_to_delete, vertex_new_position );
-        
-        bool volume_change = collapse_edge_introduces_volume_change( vertex_to_delete, edge, vertex_new_position );
+        bool volume_change = collapse_edge_introduces_volume_change( vertex_to_delete, vertex_to_keep, edge, vertex_new_position );
         
         if ( volume_change && !m_surf.m_aggressive_mode)
         {
-            // Restore saved positions which were changed by the function we just called.
-            m_surf.set_newposition( vertex_to_keep, m_surf.get_position(vertex_to_keep) );
-            m_surf.set_newposition( vertex_to_delete, m_surf.get_position(vertex_to_delete) );
-            
             g_stats.add_to_int( "EdgeCollapser:collapse_volume_change", 1 );
             
             if ( m_surf.m_verbose ) { std::cout << "collapse_volume_change" << std::endl; }
@@ -862,10 +859,6 @@ bool EdgeCollapser::collapse_edge( size_t edge )
         
         if ( normal_inversion && !m_surf.m_aggressive_mode)//&& (edge_len >= m_t1_pull_apart_distance) )
         {
-            // Restore saved positions which were changed by the function we just called.
-            m_surf.set_newposition( vertex_to_keep, m_surf.get_position(vertex_to_keep) );
-            m_surf.set_newposition( vertex_to_delete, m_surf.get_position(vertex_to_delete) );
-            
             if ( m_surf.m_verbose ) { std::cout << "normal_inversion" << std::endl; }
             return false;
         }
@@ -874,10 +867,6 @@ bool EdgeCollapser::collapse_edge( size_t edge )
         
         if ( bad_angle && !m_surf.m_aggressive_mode )//&& edge_len >= m_t1_pull_apart_distance )
         {
-            // Restore saved positions which were changed by the function we just called.
-            m_surf.set_newposition( vertex_to_keep, m_surf.get_position(vertex_to_keep) );
-            m_surf.set_newposition( vertex_to_delete, m_surf.get_position(vertex_to_delete) );
-            
             if ( m_surf.m_verbose ) { std::cout << "bad_angle" << std::endl; }
             
             g_stats.add_to_int( "EdgeCollapser:collapse_bad_angle", 1 );
@@ -885,6 +874,10 @@ bool EdgeCollapser::collapse_edge( size_t edge )
             
         }
         
+        // Change source vertex predicted position to superimpose onto destination vertex
+        m_surf.set_newposition( vertex_to_keep, vertex_new_position );
+        m_surf.set_newposition( vertex_to_delete, vertex_new_position );
+
         bool collision = false;
         
         if ( m_surf.m_collision_safety )
@@ -1027,6 +1020,8 @@ bool EdgeCollapser::edge_is_collapsible( size_t edge_index, double& current_leng
     
     //skip boundary edges if we're not remeshing those
     if(!m_remesh_boundaries && m_surf.m_mesh.m_is_boundary_edge[edge_index]) { return false; }
+
+    current_length = m_surf.get_edge_length(edge_index);
     
     //try to collapse based on small angles
     size_t vertex_a = m_surf.m_mesh.m_edges[edge_index][0];
@@ -1054,7 +1049,6 @@ bool EdgeCollapser::edge_is_collapsible( size_t edge_index, double& current_leng
         //    return true;
     }
     
-    current_length = m_surf.get_edge_length(edge_index);
     if ( m_use_curvature )
     {
         

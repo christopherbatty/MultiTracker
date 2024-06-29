@@ -120,6 +120,7 @@ private:
     /// Determine whether collapsing an edge will introduce an unacceptable change in volume.
     ///
     bool collapse_edge_introduces_volume_change( size_t source_vertex, 
+                                                size_t destination_vertex, 
                                                 size_t edge_index, 
                                                 const Vec3d& vertex_new_position );   
     
