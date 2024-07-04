@@ -603,54 +603,21 @@ size_t NonDestructiveTriMesh::get_triangle_index( size_t vtx0, size_t vtx1, size
 ///
 // --------------------------------------------------------
 
-void NonDestructiveTriMesh::clear_deleted_triangles( std::vector<Vec2st>* defragged_triangle_map )
-{  
-    
+void NonDestructiveTriMesh::clear_deleted_triangles()
+{
     std::vector<Vec3st> new_tris;
     std::vector<Vec2i> new_labels;
 
-    //work out the new size first
-    int live_tri_count = 0;
-    for ( size_t i = 0; i < m_tris.size(); ++i )
-       live_tri_count += !triangle_is_deleted(i)?1:0; 
-
-    new_tris.resize( live_tri_count );
-    new_labels.resize( live_tri_count );
-
-    if ( defragged_triangle_map != NULL )
+    for (size_t i = 0; i < m_tris.size(); ++i)
     {
-       defragged_triangle_map->resize(live_tri_count);
-       
-       //then do all the mapping
-       int j_index = 0;
-       for ( size_t i = 0; i < m_tris.size(); ++i )
-       {
-          if ( !triangle_is_deleted(i) ) 
-          {
-             new_tris[j_index] = m_tris[i];
-             new_labels[j_index] = m_triangle_labels[i];
-             Vec2st map_entry(i, j_index);
-             defragged_triangle_map->at(j_index) = map_entry;
-             ++j_index;
-          }
-       }
-    }
-    else
-    {
-        int j_index = 0;
-        for ( size_t i = 0; i < m_tris.size(); ++i )
+        if (!triangle_is_deleted(i))
         {
-            if ( !triangle_is_deleted(i) ) 
-            {
-                new_tris[j_index] = m_tris[i];
-                new_labels[j_index] = m_triangle_labels[i];
-                ++j_index;
-            }
-        }      
+            new_tris.emplace_back(m_tris[i]);
+            new_labels.emplace_back(m_triangle_labels[i]);
+        }
     }
-    
-    replace_all_triangles( new_tris, new_labels );
-   
+
+    replace_all_triangles(new_tris, new_labels);
 }
 
 
@@ -679,77 +646,73 @@ void NonDestructiveTriMesh::clear_connectivity()
 ///
 // --------------------------------------------------------
 
-void NonDestructiveTriMesh::update_connectivity( )
+void NonDestructiveTriMesh::update_connectivity()
 {
-    
     clear_connectivity();
-    
+
+    const size_t nt = m_tris.size();
+    if (nt == 0) return; // If we don't do this, logic for counting nv is incorrect due to the increment at the end.
+
     size_t nv = 0;
-    for ( size_t i = 0; i < m_tris.size(); ++i )
+    for (const auto& tri : m_tris)
     {
-        nv = max( nv, m_tris[i][0] );
-        nv = max( nv, m_tris[i][1] );
-        nv = max( nv, m_tris[i][2] );      
+        nv = max(nv, tri[0]);
+        nv = max(nv, tri[1]);
+        nv = max(nv, tri[2]);
     }
     ++nv;
-    
+
     m_vertex_to_triangle_map.resize(nv);
     m_vertex_to_edge_map.resize(nv);
-    m_triangle_to_edge_map.resize(m_tris.size());
+    m_triangle_to_edge_map.resize(nt);
 
-    for(size_t i = 0; i < m_tris.size(); i++)
+    for (size_t i = 0; i < nt; ++i)
     {
-        Vec3st& t = m_tris[i];
-        
-        if(t[0] != t[1])
+        const Vec3st& t = m_tris[i];
+
+        if (t[0] != t[1])
         {
-            
-            assert( t[0] < nv );
-            assert( t[1] < nv );
-            assert( t[2] < nv );
-            
-            for(unsigned int j = 0; j < 3; j++)
+            assert(t[0] < nv);
+            assert(t[1] < nv);
+            assert(t[2] < nv);
+
+            for (unsigned int j = 0; j < 3; ++j)
                 m_vertex_to_triangle_map[t[j]].push_back(i);
-            
+
             Vec3st& te = m_triangle_to_edge_map[i];
-            
-            for(int j = 0; j < 3; j++)
+
+            for (int j = 0; j < 3; j++)
             {
-                size_t vtx0 = t[j];
-                size_t vtx1 = t[ i_plus_one_mod_three[j] ];
-                
+                const size_t vtx0 = t[j];
+                const size_t vtx1 = t[i_plus_one_mod_three[j]];
+
                 size_t e = get_edge_index(vtx0, vtx1);
-                
-                if(e == m_edges.size())
-                {
+                if (e == m_edges.size())
                     e = nondestructive_add_edge(vtx0, vtx1);
-                }
-                
+
                 te[j] = e;
                 m_edge_to_triangle_map[e].push_back(i);
             }
         }
     }
-    
+
     // find boundary edges and vertices
-    m_is_boundary_edge.resize( m_edges.size() );
-    m_is_boundary_vertex.resize( nv, false );
-    
-    for ( size_t e = 0; e < m_edge_to_triangle_map.size(); ++e )
+    m_is_boundary_edge.resize(m_edges.size());
+    m_is_boundary_vertex.resize(nv, false);
+
+    for (size_t e = 0; e < m_edge_to_triangle_map.size(); ++e)
     {
-        //if ( m_edge_to_triangle_map[e].size() % 2 == 0 )
-        if ( m_edge_to_triangle_map[e].size() != 1 )
+        if (m_edge_to_triangle_map[e].size() != 1)
         {
             m_is_boundary_edge[e] = false;
         }
         else
         {
             m_is_boundary_edge[e] = true;
-            m_is_boundary_vertex[ m_edges[e][0] ] = true;
-            m_is_boundary_vertex[ m_edges[e][1] ] = true;
+            m_is_boundary_vertex[m_edges[e][0]] = true;
+            m_is_boundary_vertex[m_edges[e][1]] = true;
         }
     }
-    
 }
 
 

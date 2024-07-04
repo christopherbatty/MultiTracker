@@ -145,8 +145,6 @@ m_allow_vertex_movement_during_collapse( initial_parameters.m_allow_vertex_movem
 m_perform_smoothing( initial_parameters.m_perform_smoothing),
 m_vertex_change_history(),
 m_triangle_change_history(),
-m_defragged_triangle_map(),
-m_defragged_vertex_map(),
 m_solid_vertices_callback(NULL),
 m_mesheventcallback(NULL),
 m_aggressive_mode(false),
@@ -395,126 +393,96 @@ void SurfTrack::remove_vertex( size_t vertex_index )
 ///
 // ---------------------------------------------------------
 
-void SurfTrack::defrag_mesh( )
+void SurfTrack::defrag_mesh()
 {
-    
     //
     // First clear deleted vertices from the data structures
     //
-    
-    double start_time = get_time_in_seconds();
-    
+
+    const double start_time = get_time_in_seconds();
+
     // do a quick pass through to see if any vertices/tris have been deleted
-    
+
+    const size_t nv = m_mesh.nv();
     int vert_delete_count = 0;
-    for (size_t i = 0; i < get_num_vertices(); ++i)
+    for (size_t i = 0; i < nv; ++i)
     {
-       if (m_mesh.vertex_is_deleted(i))
-       {
-          vert_delete_count++;
-       }
+        if (m_mesh.vertex_is_deleted(i))
+            ++vert_delete_count;
     }
-    
+
+    const size_t nt = m_mesh.nt();
     int tri_delete_count = 0;
-    for (size_t i = 0; i < m_mesh.num_triangles(); ++i)
+    for (size_t i = 0; i < nt; ++i)
     {
-       if (m_mesh.triangle_is_deleted(i))
-       {
-          tri_delete_count++;
-       }
+        if (m_mesh.triangle_is_deleted(i))
+            ++tri_delete_count;
     }
 
-    double defrag_threshold = 0.1; //10% threshold seems reasonable
-    bool enough_deleted = tri_delete_count > defrag_threshold*m_mesh.num_triangles() ||
-                          vert_delete_count > defrag_threshold*get_num_vertices();
+    const double defrag_threshold = 0.1; //10% threshold seems reasonable
+    const bool enough_deleted = tri_delete_count > defrag_threshold * nt ||
+                                vert_delete_count > defrag_threshold * nv;
 
-    if (!enough_deleted) {
-       std::cout << "Skipping defrag.\n";
-       return;
+    if (!enough_deleted)
+    {
+        std::cout << "Skipping defrag.\n";
+        return;
     }
-    
-    bool any_deleted = vert_delete_count > 0;
 
     std::cout << "Defrag mesh\n";
 
-    //resize/allocate up front rather than via push_backs
-    m_defragged_vertex_map.resize(get_num_vertices());
-    
-    if ( !any_deleted )
+    if (vert_delete_count > 0)
     {
-        for ( size_t i = 0; i < get_num_vertices(); ++i )
-        {
-            m_defragged_vertex_map[i] = Vec2st(i,i);
-        }
-        
-        double end_time = get_time_in_seconds();
-        g_stats.add_to_double( "total_clear_deleted_vertices_time", end_time - start_time );
-        
-    }
-    else
-    {
-        
         // Note: We could rebuild the mesh from scratch, rather than adding/removing
         // triangles, however this function is not a major computational bottleneck.
-        
+
         size_t j = 0;
-        
-        std::vector<Vec3st> new_tris = m_mesh.get_triangles();
-        
-        for ( size_t i = 0; i < get_num_vertices(); ++i )
+
+        for (size_t i = 0; i < nv; ++i)
         {
-            if ( !m_mesh.vertex_is_deleted(i) )
+            if (!m_mesh.vertex_is_deleted(i))
             {
                 pm_positions[j] = pm_positions[i];
                 pm_newpositions[j] = pm_newpositions[i];
                 m_masses[j] = m_masses[i];
-                
-                m_defragged_vertex_map[i] = Vec2st(i,j);
-                
+
                 // Now rewire the triangles containing vertex i
-                
+
                 // copy this, since we'll be changing the original as we go
-                std::vector<size_t> inc_tris = m_mesh.m_vertex_to_triangle_map[i];
-                
-                for ( size_t t = 0; t < inc_tris.size(); ++t )
+                const std::vector<size_t> inc_tris = m_mesh.m_vertex_to_triangle_map[i];
+                for (const auto& tri_idx : inc_tris)
                 {
-                    Vec3st triangle = m_mesh.get_triangle( inc_tris[t] );
-                    Vec2i tri_label = m_mesh.get_triangle_label(inc_tris[t]);
-                    
-                    assert( triangle[0] == i || triangle[1] == i || triangle[2] == i );
-                    if ( triangle[0] == i ) { triangle[0] = j; }
-                    if ( triangle[1] == i ) { triangle[1] = j; }
-                    if ( triangle[2] == i ) { triangle[2] = j; }
-                    
-                    renumber_triangle(inc_tris[t], triangle);
+                    Vec3st triangle = m_mesh.get_triangle(tri_idx);
+
+                    assert(triangle[0] == i || triangle[1] == i || triangle[2] == i);
+                    if (triangle[0] == i) triangle[0] = j;
+                    if (triangle[1] == i) triangle[1] = j;
+                    if (triangle[2] == i) triangle[2] = j;
+
+                    renumber_triangle(tri_idx, triangle);
                 }
-                
+
                 ++j;
             }
         }
-        
+
         pm_positions.resize(j);
         pm_newpositions.resize(j);
         m_masses.resize(j);
     }
-    
-    double end_time = get_time_in_seconds();
-    
-    g_stats.add_to_double( "total_clear_deleted_vertices_time", end_time - start_time );
-    
-    
+
+    const double end_time = get_time_in_seconds();
+    g_stats.add_to_double("total_clear_deleted_vertices_time", end_time - start_time);
+
     //
     // Now clear deleted triangles from the mesh
     //
-    
-    m_mesh.set_num_vertices( get_num_vertices() );
-    m_mesh.clear_deleted_triangles( &m_defragged_triangle_map );
-    
-    if ( m_collision_safety )
-    {
+
+    m_mesh.set_num_vertices(get_num_vertices());
+    m_mesh.clear_deleted_triangles();
+
+    if (m_collision_safety)
         rebuild_continuous_broad_phase();
-    }
-    
 }
 
 
