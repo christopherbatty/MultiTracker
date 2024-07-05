@@ -732,19 +732,10 @@ public:
     ///    
     std::vector<TriangleUpdateEvent> m_triangle_change_history;
     
-    /// Map of triangle indices, mapping pre-defrag triangle indices to post-defrag indices
-    ///
-    std::vector<Vec2st> m_defragged_triangle_map;
-    
-    /// Map of vertex indices, mapping pre-defrag vertex indices to post-defrag indices
-    ///
-    std::vector<Vec2st> m_defragged_vertex_map;
-
     /// History of higher level mesh update events (split, flip, collapse, smooth)
     ///    
     std::vector<MeshUpdateEvent> m_mesh_change_history;
 
-    
 };
 
 // ---------------------------------------------------------

@@ -348,6 +348,7 @@ int main(int argc, char * argv[])
     stip.m_min_edge_length = 1;
     stip.m_max_edge_length = 1;
     stip.m_max_volume_change = std::numeric_limits<double>::max();
+    stip.m_collision_safety = false;
     std::vector<LosTopos::Vec3d> vs(3); vs[0] = LosTopos::Vec3d(0, 0, 0); vs[1] = LosTopos::Vec3d(1, 0, 0); vs[2] = LosTopos::Vec3d(0, 1, 0);
     std::vector<LosTopos::Vec3d> ms(3); ms[0] = LosTopos::Vec3d(1, 1, 1); ms[1] = LosTopos::Vec3d(1, 1, 1); ms[2] = LosTopos::Vec3d(1, 1, 1);
     std::vector<LosTopos::Vec3st> fs(1); fs[0] = LosTopos::Vec3st(0, 1, 2);

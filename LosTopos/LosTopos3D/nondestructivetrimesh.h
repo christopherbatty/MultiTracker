@@ -225,7 +225,7 @@ public:
     
     /// Remove triangles which have been deleted
     ///
-    void clear_deleted_triangles( std::vector<Vec2st>* defragged_triangle_map = NULL );
+    void clear_deleted_triangles();
     
     /// Determine if the given edge is on a surface composed of a single tet
     ///
