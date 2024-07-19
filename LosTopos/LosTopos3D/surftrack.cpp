@@ -1054,12 +1054,19 @@ bool SurfTrack::vertex_feature_is_smooth_ridge(size_t vertex) const
     // adjust for orientation
     if ((e0[0] == vertex && e1[0] == vertex) || (e0[1] == vertex && e1[1] == vertex))
         t1 = -t1;
-    
-    double angle = acos(dot(t0, t1));
-    if (angle > m_feature_edge_angle_threshold)
-        return false;
-    
-    return true;
+
+    const double dot_product = dot(t0, t1);
+    assert(std::abs(dot_product) < 1 + 1e-6);
+
+    double angle = std::acos(dot_product);
+    if (dot_product >= 1)
+        angle = 0;
+    else if (dot_product <= -1)
+        angle = M_PI;
+
+    assert(!std::isnan(angle));
+
+    return angle <= m_feature_edge_angle_threshold;
 }
 
     
