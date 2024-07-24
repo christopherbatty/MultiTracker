@@ -681,7 +681,7 @@ bool EdgeSplitter::split_edge( size_t edge, size_t& result_vert, bool ignore_bad
     {
         
         // if new triangle improves a large angle, allow it
-        if ( rad2deg(max_new_angle) < rad2deg(max_current_angle) )
+        if ( rad2deg(max_new_angle) >= rad2deg(max_current_angle) )
         {
             g_stats.add_to_int( "EdgeSplitter:edge_split_large_angle", 1 );
             return false;
