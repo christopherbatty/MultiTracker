@@ -619,28 +619,30 @@ bool EdgeSplitter::split_edge( size_t edge, size_t& result_vert, bool ignore_bad
     
     //At this stage, we have chosen the point we want to stick with and it is collision-safe.
     //now we need to do some final checks, and then proceed.
-    
+
     //Don't allow splitting to create edges shorter than half the minimum.
     const Vec3d& va = m_surf.get_position(vertex_a);
     const Vec3d& vb = m_surf.get_position(vertex_b);
-    if(!m_surf.m_aggressive_mode) {
-        if(mag(new_vertex_proposed_final_position-va) < 0.5*m_surf.m_min_edge_length ||
-           mag(new_vertex_proposed_final_position-vb) < 0.5*m_surf.m_min_edge_length)
-            return false;
-    }
-    else { //if we're being aggressive, only stop if we're getting really extreme.
-        if(mag(new_vertex_proposed_final_position-va) < m_surf.m_hard_min_edge_len ||
-           mag(new_vertex_proposed_final_position-vb) < m_surf.m_hard_min_edge_len)
-            return false;
-    }
+
+    // If we're being aggressive, only stop if we're getting really extreme.
+    const double edge_length_threshold = m_surf.m_aggressive_mode ? m_surf.m_hard_min_edge_len : 0.5 * m_surf.m_min_edge_length;
+
+    if (mag(new_vertex_proposed_final_position - va) < edge_length_threshold ||
+        mag(new_vertex_proposed_final_position - vb) < edge_length_threshold)
+        return false;
+
+    std::vector<Vec3d> other_vert_pos;
+    for (size_t i = 0; i < other_verts.size(); ++i)
+        other_vert_pos.push_back(m_surf.get_position(other_verts[i]));
     
+    // Check lengths of edges that would be created for each tri incident to split edge.
+    for (const auto& pos : other_vert_pos)
+        if (mag(new_vertex_proposed_final_position - pos) < edge_length_threshold)
+            return false;
+
     // --------------
     
     // Check angles on new triangles
-    
-    std::vector<Vec3d> other_vert_pos;
-    for(size_t i = 0; i < other_verts.size(); ++i)
-        other_vert_pos.push_back(m_surf.get_position(other_verts[i]));
     
     double min_current_angle = 2*M_PI;
     for(size_t i = 0; i < incident_tris.size(); ++i) {
