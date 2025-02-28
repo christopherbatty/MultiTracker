@@ -443,7 +443,7 @@ bool FaceSplitter::split_face( size_t face, size_t& result_vertex, bool specify_
     }
     
     if(!point_okay) { //try the default barycenter point instead.
-        if ( !split_face_pseudo_motion_introduces_intersection( new_vertex_position, new_vertex_smooth_position, face) )
+        if ( split_face_pseudo_motion_introduces_intersection( new_vertex_position, new_vertex_smooth_position, face) )
         {
             g_stats.add_to_int( "FaceSplitter:split_midpoint_collisions", 1 );
             
