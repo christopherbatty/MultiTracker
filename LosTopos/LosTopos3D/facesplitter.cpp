@@ -411,8 +411,8 @@ bool FaceSplitter::split_face( size_t face, size_t& result_vertex, bool specify_
     if ( rad2deg(max_new_angle) > m_surf.m_max_triangle_angle )
     {
         
-        // if new triangle improves a large angle, allow it
-        if ( rad2deg(max_new_angle) < rad2deg(max_current_angle) )
+        // if new triangle improves a large angle, allow it, else prevent the split
+        if ( rad2deg(max_new_angle) > rad2deg(max_current_angle) )
         {
             g_stats.add_to_int( "EdgeSplitter:edge_split_large_angle", 1 );
             return false;
