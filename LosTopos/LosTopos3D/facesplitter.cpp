@@ -401,9 +401,9 @@ bool FaceSplitter::split_face( size_t face, size_t& result_vertex, bool specify_
     double max_current_angle = max_triangle_angle(va, vb, vc);
     
     double max_new_angle = 0;
-    max_new_angle = min( max_new_angle, max_triangle_angle( va, vb, new_vertex_position ) );
-    max_new_angle = min( max_new_angle, max_triangle_angle( vb, vc, new_vertex_position ) );
-    max_new_angle = min( max_new_angle, max_triangle_angle( vc, va, new_vertex_position ) );
+    max_new_angle = max( max_new_angle, max_triangle_angle( va, vb, new_vertex_position ) );
+    max_new_angle = max( max_new_angle, max_triangle_angle( vb, vc, new_vertex_position ) );
+    max_new_angle = max( max_new_angle, max_triangle_angle( vc, va, new_vertex_position ) );
     
     // if new angle is greater than the allowed angle, and doesn't
     // improve the current max angle, prevent the split
