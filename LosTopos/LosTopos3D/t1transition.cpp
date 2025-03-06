@@ -785,15 +785,25 @@ void T1Transition::triangulate_popped_vertex(size_t xj, int A, int B, size_t a, 
     }
     
     std::vector<size_t> A_edges;
-    for (size_t j = 0; j < mesh.m_vertex_to_edge_map[xj].size(); j++)
+    for (const auto& edge_idx : mesh.m_vertex_to_edge_map[xj])
     {
-        size_t edge = mesh.m_vertex_to_edge_map[xj][j];
-        for (size_t k = 0; k < mesh.m_edge_to_triangle_map[edge].size(); k++)
+        bool exists_A_tri = false;
+        bool exists_B_tri = false;
+
+        for (const auto& tri_idx : mesh.m_edge_to_triangle_map[edge_idx])
         {
-            Vec2i label = mesh.get_triangle_label(mesh.m_edge_to_triangle_map[edge][k]);
-            if (label[0] == A || label[1] == A)
+            const Vec2i& label = mesh.get_triangle_label(tri_idx);
+            const bool has_A_label = (label[0] == A || label[1] == A);
+
+            if (has_A_label)
+                exists_A_tri = true;
+
+            if (!has_A_label)
+                exists_B_tri = true;
+
+            if (exists_A_tri && exists_B_tri)
             {
-                A_edges.push_back(edge);
+                A_edges.push_back(edge_idx);
                 break;
             }
         }
