@@ -208,7 +208,7 @@ bool EdgeCollapser::collapse_edge_pseudo_motion_introduces_collision( size_t sou
                 double distance, s0, s2;
                 Vec3d normal;
                 check_edge_edge_proximity(m_surf.get_newposition(e0[0]), m_surf.get_newposition(e0[1]), m_surf.get_newposition(e1[0]), m_surf.get_newposition(e1[1]), distance, s0, s2, normal);
-                if (distance == 0)
+                if (distance < m_surf.m_improve_collision_epsilon)
                     return true;
             }
             
@@ -226,7 +226,7 @@ bool EdgeCollapser::collapse_edge_pseudo_motion_introduces_collision( size_t sou
                 double distance, s1, s2, s3;
                 Vec3d normal;
                 check_point_triangle_proximity(m_surf.get_newposition(v), m_surf.get_newposition(tri[0]), m_surf.get_newposition(tri[1]), m_surf.get_newposition(tri[2]), distance, s1, s2, s3, normal);
-                if (distance == 0)
+                if (distance < m_surf.m_improve_collision_epsilon)
                     return true;
             }
         }

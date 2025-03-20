@@ -401,9 +401,9 @@ bool FaceSplitter::split_face( size_t face, size_t& result_vertex, bool specify_
     double max_current_angle = max_triangle_angle(va, vb, vc);
     
     double max_new_angle = 0;
-    max_new_angle = min( max_new_angle, max_triangle_angle( va, vb, new_vertex_position ) );
-    max_new_angle = min( max_new_angle, max_triangle_angle( vb, vc, new_vertex_position ) );
-    max_new_angle = min( max_new_angle, max_triangle_angle( vc, va, new_vertex_position ) );
+    max_new_angle = max( max_new_angle, max_triangle_angle( va, vb, new_vertex_position ) );
+    max_new_angle = max( max_new_angle, max_triangle_angle( vb, vc, new_vertex_position ) );
+    max_new_angle = max( max_new_angle, max_triangle_angle( vc, va, new_vertex_position ) );
     
     // if new angle is greater than the allowed angle, and doesn't
     // improve the current max angle, prevent the split
@@ -411,8 +411,8 @@ bool FaceSplitter::split_face( size_t face, size_t& result_vertex, bool specify_
     if ( rad2deg(max_new_angle) > m_surf.m_max_triangle_angle )
     {
         
-        // if new triangle improves a large angle, allow it
-        if ( rad2deg(max_new_angle) < rad2deg(max_current_angle) )
+        // if new triangle improves a large angle, allow it, else prevent the split
+        if ( rad2deg(max_new_angle) > rad2deg(max_current_angle) )
         {
             g_stats.add_to_int( "EdgeSplitter:edge_split_large_angle", 1 );
             return false;
@@ -443,7 +443,7 @@ bool FaceSplitter::split_face( size_t face, size_t& result_vertex, bool specify_
     }
     
     if(!point_okay) { //try the default barycenter point instead.
-        if ( !split_face_pseudo_motion_introduces_intersection( new_vertex_position, new_vertex_smooth_position, face) )
+        if ( split_face_pseudo_motion_introduces_intersection( new_vertex_position, new_vertex_smooth_position, face) )
         {
             g_stats.add_to_int( "FaceSplitter:split_midpoint_collisions", 1 );
             
