@@ -893,13 +893,15 @@ inline double DynamicSurface::get_edge_length( size_t edge_index ) const
 inline double DynamicSurface::get_average_edge_length() const
 {
     double sum_lengths = 0;
+    size_t counted_edges = 0;
     for ( size_t i = 0; i < m_mesh.m_edges.size(); ++i )
     {
         const Vec2st& e = m_mesh.m_edges[i]; 
         if ( e[0] == e[1] )  { continue; }
         sum_lengths += mag( get_position(e[1]) - get_position(e[0]) ); 
+        ++counted_edges;
     }
-    return sum_lengths / (double) m_mesh.m_edges.size();   
+    return sum_lengths / (double) counted_edges;
 }
 
 // --------------------------------------------------------
