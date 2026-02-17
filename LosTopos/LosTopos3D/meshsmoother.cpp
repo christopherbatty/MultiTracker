@@ -290,18 +290,7 @@ void MeshSmoother::null_space_smooth_vertex( size_t v,
           //so we try to encourage nicer merging by smoothing them in such a way that the sharp angle
           //becomes less sharp.
 
-          //Figure out which volumetric region is the sharp one.
-
-          //Collect all the regions
-          std::set<int> incident_regions;
-          for (size_t i = 0; i < m_surf.m_mesh.m_vertex_to_triangle_map[v].size(); ++i)  {
-             size_t tri = m_surf.m_mesh.m_vertex_to_triangle_map[v][i];
-             Vec2i region_pair = m_surf.m_mesh.get_triangle_label(tri);
-             incident_regions.insert(region_pair[0]);
-             incident_regions.insert(region_pair[1]);
-          }
-
-          //Find the sharpest one
+          //Figure out which volumetric region is the sharpest one.
           int sharpest_region = -1;
           double sharp_angle = 0;
 
@@ -312,6 +301,15 @@ void MeshSmoother::null_space_smooth_vertex( size_t v,
              //let's only consider 3-way junctions, since 4-ways are more complex and unstable anyway
              if (m_surf.m_mesh.m_edge_to_triangle_map[edge].size() > 3)
                 continue;
+
+             //Collect all the regions
+             std::set<int> incident_regions;
+             for (const auto& tri_idx : m_surf.m_mesh.m_edge_to_triangle_map[edge])
+             {
+                 const Vec2i region_pair = m_surf.m_mesh.get_triangle_label(tri_idx);
+                 incident_regions.insert(region_pair[0]);
+                 incident_regions.insert(region_pair[1]);
+             }
 
              //for each region...
              for (std::set<int>::iterator it = incident_regions.begin(); it != incident_regions.end(); ++it) {
